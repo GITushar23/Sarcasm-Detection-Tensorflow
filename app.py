@@ -7,9 +7,11 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import pickle
 from huggingface_hub import InferenceClient
+import streamlit.secrets as secrets
 
-# Initialize InferenceClient with your repository ID and API token
-API_TOKEN = "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"
+# Initialize InferenceClient with your Hugging face API token
+API_TOKEN = secrets["API_TOKEN"]
+
 
 # Set page configuration with custom theme  
 st.set_page_config(
