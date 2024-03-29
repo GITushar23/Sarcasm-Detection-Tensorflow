@@ -92,7 +92,7 @@ def predict_text_bert(text):
     # Convert the inputs to a format that can be serialized to JSON
     inputs_json = {k: v.tolist() for k, v in inputs.items()}
     # Perform inference using the Hugging Face InferenceClient
-    output = client.post(json={"inputs": inputs_json})
+    output = client.post(json={"inputs": text})
     # Process the response to extract the prediction
     prediction = output.json()[0]['label']
     # Convert the label to a numerical value (assuming 'LABEL_1' is sarcastic and 'LABEL_0' is not sarcastic)
