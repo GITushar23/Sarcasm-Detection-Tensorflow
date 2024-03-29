@@ -6,8 +6,12 @@ from tf_keras.preprocessing.text import Tokenizer
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import pickle
+from huggingface_hub import InferenceClient
 
-# Set page configuration with custom theme
+# Initialize InferenceClient with your repository ID and API token
+API_TOKEN = "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"
+
+# Set page configuration with custom theme  
 st.set_page_config(
     page_title="Sarcasm Detection App",
     page_icon="😏",
@@ -57,9 +61,8 @@ model_lstm = LSTMModel(2500, 128, 196, 0.1).to(device)
 model_lstm.load_state_dict(torch.load("./lstm/lstm_model.pth", map_location=device)['model_state_dict'])
 model_lstm.eval()
 
-model_name = "TusharKumar23/bertSarcasm-DSG"
-model_bert = BertForSequenceClassification.from_pretrained(model_name).to(device)
 tokenizer_bert = BertTokenizer.from_pretrained('bert-base-uncased')
+client = InferenceClient(model="TusharKumar23/bertSarcasm-DSG", token=API_TOKEN)
 
 # Function to make predictions using LSTM
 def predict_sarcasm_lstm(texts, model, tokenizer, max_length):
@@ -74,12 +77,19 @@ def predict_sarcasm_lstm(texts, model, tokenizer, max_length):
 
 # Function to make predictions using BERT
 def predict_text_bert(text):
+    # Tokenize the input text using the 'bert-base-uncased' tokenizer
     inputs = tokenizer_bert(text, return_tensors='pt', max_length=256, truncation=True, padding=True)
-    with torch.no_grad():
-        inputs = {key: val.to(device) for key, val in inputs.items()}
-        outputs = model_bert(**inputs)
-    predicted_label = torch.argmax(outputs.logits, dim=1).item()
-    return predicted_label
+    # Convert the inputs to a format that can be serialized to JSON
+    inputs_json = {k: v.tolist() for k, v in inputs.items()}
+    # Perform inference using the Hugging Face InferenceClient
+    output = client.post(json={"inputs": inputs_json})
+    # Process the response to extract the prediction
+    prediction = output.json()[0]['label']
+    # Convert the label to a numerical value (assuming 'LABEL_1' is sarcastic and 'LABEL_0' is not sarcastic)
+    if prediction == 'LABEL_1':
+        return 1
+    else:
+        return 0
 
 # Streamlit app
 st.title("Sarcasm Detection App")
