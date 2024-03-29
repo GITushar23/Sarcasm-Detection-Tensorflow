@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import pickle
 from huggingface_hub import InferenceClient
 import os
+import json
 
 
 
@@ -87,14 +88,10 @@ def predict_sarcasm_lstm(texts, model, tokenizer, max_length):
 
 # Function to make predictions using BERT
 def predict_text_bert(text):
-    # Tokenize the input text using the 'bert-base-uncased' tokenizer
-    inputs = tokenizer_bert(text, return_tensors='pt', max_length=256, truncation=True, padding=True)
-    # Convert the inputs to a format that can be serialized to JSON
-    inputs_json = {k: v.tolist() for k, v in inputs.items()}
     # Perform inference using the Hugging Face InferenceClient
-    output = client.post(json={"inputs": text})
-    # Process the response to extract the prediction
-    prediction = output.json()[0]['label']
+    output = client.post(json={"text": text})
+    output_json = json.loads(output)
+    prediction = output_json[0]['label']
     # Convert the label to a numerical value (assuming 'LABEL_1' is sarcastic and 'LABEL_0' is not sarcastic)
     if prediction == 'LABEL_1':
         return 1
