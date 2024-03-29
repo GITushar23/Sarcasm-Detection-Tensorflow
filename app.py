@@ -7,10 +7,8 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import pickle
 from huggingface_hub import InferenceClient
-import streamlit.secrets as secrets
+import os
 
-# Initialize InferenceClient with your Hugging face API token
-API_TOKEN = secrets["API_TOKEN"]
 
 
 # Set page configuration with custom theme  
@@ -62,6 +60,16 @@ class LSTMModel(nn.Module):
 model_lstm = LSTMModel(2500, 128, 196, 0.1).to(device)
 model_lstm.load_state_dict(torch.load("./lstm/lstm_model.pth", map_location=device)['model_state_dict'])
 model_lstm.eval()
+
+
+# Initialize InferenceClient with your Hugging face API token
+# Access the API token from environment variable
+API_TOKEN = os.getenv("API_TOKEN")
+
+# Check if API token is available
+if API_TOKEN is None:
+    st.error("API token is not set. Please set the API_TOKEN environment variable.")
+    st.stop()
 
 tokenizer_bert = BertTokenizer.from_pretrained('bert-base-uncased')
 client = InferenceClient(model="TusharKumar23/bertSarcasm-DSG", token=API_TOKEN)
